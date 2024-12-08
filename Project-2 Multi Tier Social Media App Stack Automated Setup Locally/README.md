@@ -1,4 +1,4 @@
-# Project-2: Vprofile Project: Automated Setup of Multi Tier App, Locally
+# Project-2: Project-2 Multi Tier Social Media App Stack Automated Setup Locally
 
 [*Project Source*](https://www.udemy.com/course/devopsprojects/?src=sac&kw=devops+projects)
 ![](images/vprofile-project.png)
