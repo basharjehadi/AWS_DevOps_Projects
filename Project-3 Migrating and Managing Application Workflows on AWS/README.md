@@ -4,7 +4,7 @@
 
 ## Prerequisites:
  * AWS Account
- * Registered DNS Name
+ * Registered Domain
  * Maven
  * JDK8
  * AWS CLI
