@@ -35,10 +35,50 @@
  * nginx:latest
 
 
-
-
 ### Step-3: Write Dockerfile to customize
 
+- We will clone  below repository and make sure choose container branch .
+```sh
+git clone https://github.com/hkhcoder/vprofile-project.git
+```
+- After cloning we can open the project in vs code and we will see in projects structure a folder called Docker-files and here app,db & web folder exist and each folder has  an empty Dockerfile where we are going to write our docker commands.
+
+### Dockerfile for app
+```sh
+FROM maven:3.9.9-eclipse-temurin-21-jammy AS BUILD_IMAGE
+RUN git clone https://github.com/hkhcoder/vprofile-project.git
+RUN cd vprofile-projects && git checkout containers && mvn install
+
+FROM tomcat:10-jdk21
+RUN rm -rf /usr/local/tomcat/webapps/*
+COPY --from=BUILD_IMAGE vprofile-project/target/vprofile-v2.war /usr/local/tomcat/webapps/ROOT.war
+
+EXPOSE 8080
+CMD [ "catalina.sh","run" ]
+```
+
+### Dockerfile for db
+```sh
+FROM mysql:8.0.33
+LABEL Project="Vprofile"
+LABEL Authror="Bashar"
+
+ENV MYSQL_ROOT_PASSWORD="vprodbpass"
+ENV MYSQL_DATABASE="accounts"
+
+ADD db_backup.sql docker-entrypoint-initdb.d/db_backup.sql
+```
+
+### Dockerfile for web
+```sh
+FROM nginx 
+LABEL Project="Vprofile"
+LABEL Authror="Bashar"
+
+RUN rm -rf /etc/nginx/conf.d/default.conf
+COPY nginvproapp.conf /etc/nginx/conf.d/vproapp.conf
+```
+ - For other two services (Memcached & rabbitMq) we don't need seperate dockerfile we can just use official images.
 
 ### Step-4: Write docker-compose.yml file to run multi containers.
 
