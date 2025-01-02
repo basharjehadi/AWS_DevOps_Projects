@@ -1,7 +1,6 @@
-# Project 6: Continous Integration  With Jenkins
+# AWS Project Used In Production | Complete Implementation
 
-
-[*Project Source*](https://www.udemy.com/course/devopsprojects/?src=sac&kw=devops+projects)
+[*Project Source*](https://www.youtube.com/watch?v=FZPTL_kNvXc&list=PLdpzxOOAlwvLNOxX0RfndiYSt1Le9azze&index=9)
 
 
 ![Architecture](images/CI-with-jenkins.png)
