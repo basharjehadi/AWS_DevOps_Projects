@@ -1,4 +1,5 @@
 # AWS Project Used In Production | Complete Implementation
+###This project involves creating a production-ready VPC with servers deployed across two Availability Zones for resiliency, using an Auto Scaling group and Application Load Balancer. The servers, placed in private subnets, receive traffic through the load balancer and access the internet via NAT gateways in both Availability Zones for added reliability.
 
 [*Project Source*](https://www.youtube.com/watch?v=FZPTL_kNvXc&list=PLdpzxOOAlwvLNOxX0RfndiYSt1Le9azze&index=9)
 
