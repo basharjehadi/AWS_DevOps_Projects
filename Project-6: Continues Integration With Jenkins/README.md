@@ -1,4 +1,4 @@
-# Project 6: Continous Integration  With Jenkins
+# Project 6: Continous Integration and Continous Delivery With Jenkins
 
 
 [*Project Source*](https://www.udemy.com/course/devopsprojects/?src=sac&kw=devops+projects)
@@ -13,7 +13,7 @@
 ```sh
 #!/bin/bash
 sudo apt update
-sudo apt install openjdk-11-jdk -y
+sudo apt install openjdk-21-jdk -y
 sudo apt install maven wget unzip -y
 
 curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
@@ -28,7 +28,6 @@ sudo apt-get install jenkins -y
 ###
 
 ```
-
 
 ## Step-2: Nexus Setup
 - created a EC2 instance with Amazon AMI with t2 medium because Nexus required higher memory.
@@ -216,6 +215,8 @@ reboot
 ## Step-4: Security Group
 - we edited jenkins security group where we allowd port 8080 with sonar security group
 ![security-group](images/jenkins-security-group.png)
+- we created two more security group for nexus and sonar and we allowed jenkins security group in their inbound rule
+![security-groups](images/Security-groups.png)
 
 ## Step-5: Plugins
 - Nexus
@@ -230,13 +231,147 @@ reboot
 
 ## Step-6:Integrate
 
+###  Sonarqube
+- previously we installed sonar plugins so now we will go tools in jenkins and add sonarqube Scanner with given information.
+![Sonar-in-jenkins-tools](images/Sonar-in-jenkins-tools.png)
+
+
+- we will go to sonarqube app and go to administrator  and then security and create token as follows in image below.
+![Sonar-token](images/Sonar-token.png)
+
+- we will go to jenkins system and we will setup Sonarqube server with the token we generated and sonar sever private IP.
+![sonar-in-jenkins-system](images/sonar-in-jenkins-system.png)
+
+- To check our setup with Sonarqube we demonstate a code analysis and created a new item call code analysis in jenkins and we select item as pipeline and  we used below code.
+```sh
+pipeline {
+	agent any
+	tools {
+	    maven "MAVEN3.9"
+	    jdk "JDK17"
+	}
+
+	stages {
+
+
+	    stage('Fetch code') {
+            steps {
+               git branch: 'atom', url: 'https://github.com/hkhcoder/vprofile-project.git'
+            }
+
+	    }
+
+
+	    stage('Build'){
+	        steps{
+	           sh 'mvn install -DskipTests'
+	        }
+
+	        post {
+	           success {
+	              echo 'Now Archiving it...'
+	              archiveArtifacts artifacts: '**/target/*.war'
+	           }
+	        }
+	    }
+
+	    stage('UNIT TEST') {
+            steps{
+                sh 'mvn test'
+            }
+        }
+
+        stage('Checkstyle Analysis') {
+            steps{
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+        stage("Sonar Code Analysis") {
+        	environment {
+                scannerHome = tool 'sonar6.2'
+            }
+            steps {
+              withSonarQubeEnv('SonarServer') {
+                sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+              }
+            }
+            
+            
+        }
+        
+        stage("Quality Gate") {
+            steps {
+              timeout(time: 1, unit: 'HOURS') {
+                waitForQualityGate abortPipeline: true
+              }
+            }
+          }
+        
+       
+
+
+	}
+
+}
+```
+- we run the build job and code analysis was successful.
+
+![Code-analysis-pipeline-overview](images/Code-analysis-pipeline-overview.png)
+
+- we can see sonarqube analyzie the code and overall it passed.
+
+![sonar-code-analysis](images/sonar-code-analysis.png)
+
+
+
 ### Nexus
 
-### Sonarqube
+-  For adding nexus in our CI pipeline we will add credentilas in jenkins as below.
+![nexus-credentials-in-jenkins](images/nexus-credentials-in-jenkins.png)
 
+- We created Vprofile repository in nexus.
 
-## Step-7:Write Pipeline Script
+![V-profile-repo-in-nexus](images/V-profile-repo-in-nexus.png)
 
-## Step-8: Set notification
+- we added  below pieace of code in our previous pipeline code after quality gate stage.
+```sh
+stage("UploadArtifact"){
+            steps{
+                nexusArtifactUploader(
+                  nexusVersion: 'nexus3',
+                  protocol: 'http',
+                  nexusUrl: '172.31.29.78:8081',
+                  groupId: 'QA',
+                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                  repository: 'vprofile-repo',
+                  credentialsId: 'nexuslogin',
+                  artifacts: [
+                    [artifactId: 'vproapp',
+                     classifier: '',
+                     file: 'target/vprofile-v2.war',
+                     type: 'war']
+                  ]
+                )
+            }
+        }
+```
+- we run the build job and sucessfully the job was build and the artifact was uploaded to nexus repository we stup earlier.
+![vprofile-ci-pipeline-uploadoverview](images/vprofile-ci-pipeline-uploadoverview.png)
 
-## Step-9: Cleanup
+- artifacts in nexus repo 
+
+![artifacts-in-nexus-repo](images/artifacts-in-nexus-repo.png)
+
+- With this we finished our Continous Integration Pipeline as we see the Architecture below
+
+![Architecture](images/CI-with-jenkins.png)
+
+## That's the end of our Continous Integration Pipeline now in Next Project We will do our Continous Delivery part
