@@ -1,5 +1,16 @@
 # Project 8: Continous Integration and Continous Delivery in AWS
 
+## Pre-Requisites:
+* AWS Account
+* AWS Elastic Beanstalk
+* AWS RDS
+* Bitbucket repository
+* AWS Code Build
+* AWS Code Pipeline
+* S3
+* Git installed on Local
+
+
 ![Diagram](images/Diagram.png)
 
 [*Project Source*](https://www.udemy.com/course/devopsprojects/?src=sac&kw=devops+projects)
