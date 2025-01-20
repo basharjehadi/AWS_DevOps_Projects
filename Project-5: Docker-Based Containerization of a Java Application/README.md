@@ -81,6 +81,68 @@ COPY nginvproapp.conf /etc/nginx/conf.d/vproapp.conf
  - For other two services (Memcached & rabbitMq) we don't need seperate dockerfile we can just use official images.
 
 ### Step-4: Write docker-compose.yml file to run multi containers.
+- Below our docker-compose file
+```sh
+version: '3.8'
+services:
+  vprodb:
+    build: 
+     context: ./Docker-files/db
+    image: basharjehadi/vprofiledb
+    container_name: vprodb
+    ports:
+      - "3306:3306"
+    volumes:
+      - vprodbdata:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=vprodbpass
+  vprocache01:
+    image: memcached
+    container_name: vprocache01
+    ports:
+      - "11211:11211"
 
+  vpromq01:
+    image: rabbitmq
+    container_name: vpromq01
+    ports:
+      - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest    
+
+  vproapp:
+    build: 
+     context: ./Docker-files/app
+    image: basharjehadi/vprofileapp
+    container_name: vproapp
+    ports:
+      - "8081:8080"
+    volumes:
+      - vproappdata:/usr/local/tomcat/webapps
+  
+  vproweb:
+    build: 
+     context: ./Docker-files/web
+    image: basharjehadi/vprofileweb
+    container_name: vproweb
+    ports:
+      - "80:80"
+
+
+
+volumes:
+  vprodbdata: {}
+  vproappdata: {}
+  
+
+```
 
 ### Step-5:Test it & Host Images on Dockerhub
+- As we can see our app is running on port 8081
+
+![app-is-running](images/app-is-running.png)
+
+- we push our three docker images into dockerhub
+
+![up-in-dockerhub](images/up-in-dockerhub.png)
